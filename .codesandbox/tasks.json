@@ -3,11 +3,7 @@
   "setupTasks": [
     {
       "name": "Installing Dependencies",
-      "command": "yarn install"
-    },
-    {
-      "name": "Building Workspace",
-      "command": "yarn build:deps"
+      "command": ""
     }
   ],
 
@@ -15,7 +11,7 @@
   "tasks": {
     "setup": {
       "name": "Install Dependencies",
-      "command": "yarn"
+      "command": "q"
     },
     "build-workspace": {
       "name": "Build deps",
@@ -24,23 +20,26 @@
     "app:fast": {
       "name": "Application (fast + production)",
       "command": "yarn start:fast",
-      "runAtStart": false,
       "preview": {
         "port": 3000
       },
       "restartOn": {
-        "files": ["yarn.lock", "packages/app/scripts/*"]
+        "files": ["yarn.lock", "packages/app/scripts/*"],
+        "branch": false,
+        "resume": false
       }
     },
     "app:fast:stream": {
       "name": "Application (fast + stream)",
       "command": "yarn start:fast:stream",
-      "runAtStart": true,
+      "runAtStart": false,
       "preview": {
         "port": 3000
       },
       "restartOn": {
-        "files": ["yarn.lock", "packages/app/scripts/*"]
+        "files": ["yarn.lock", "packages/app/scripts/*"],
+        "branch": false,
+        "resume": false
       }
     },
     "storybook": {
@@ -50,6 +49,11 @@
     "typecheck": {
       "name": "typecheck",
       "command": "yarn typecheck"
+    },
+    "yarn start": {
+      "name": "yarn start",
+      "command": "yarn start",
+      "runAtStart": false
     }
   }
 }
