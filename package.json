@@ -6,6 +6,13 @@
     "type": "git",
     "url": "https://github.com/codesandbox/codesandbox-client"
   },
+  "stackblitz": {
+    "installDependencies": false,
+    "startCommand": "",
+    "env": {
+      "NODE_ENV": "development"
+    }
+  },
   "license": "GPL-3.0",
   "workspaces": {
     "packages": [
@@ -119,11 +126,12 @@
     ]
   },
   "engines": {
-    "node": "^16.0.0"
+    "node": "^v21.0.0"
   },
   "collective": {
     "type": "opencollective",
     "url": "https://opencollective.com/codesandbox",
     "logo": "https://opencollective.com/codesandbox/logo.txt"
-  }
+  },
+  "packageManager": "yarn@4.0.0"
 }
