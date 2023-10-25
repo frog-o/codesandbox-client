@@ -11,7 +11,7 @@
   "tasks": {
     "setup": {
       "name": "Install Dependencies",
-      "command": "q"
+      "command": ""
     },
     "build-workspace": {
       "name": "Build deps",

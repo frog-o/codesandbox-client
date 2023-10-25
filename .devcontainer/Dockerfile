@@ -1,6 +1,10 @@
-FROM node:21-bullseye
+FROM jgoerzen/debian-base-security
 
-RUN apt update -y && apt install -y zstd fish podman && apt-get clean
+RUN apt-get update -y && \
+    apt-get install -y bash ca-certificates curl podman  unzip zstd && \
+    curl -fsSL https://fnm.vercel.app/install | bash \
+    && apt-get clean
 
-CMD [ "/sbin/init" ]
+CMD ["/usr/local/bin/boot-debian-base"]
+
 
