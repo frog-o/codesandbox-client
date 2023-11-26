@@ -6,13 +6,10 @@ import { VariableGrid } from 'app/pages/Dashboard/Components/VariableGrid';
 import { DashboardGridItem, PageTypes } from 'app/pages/Dashboard/types';
 import { SelectionProvider } from 'app/pages/Dashboard/Components/Selection';
 import { Element } from '@codesandbox/components';
-import { useWorkspaceLimits } from 'app/hooks/useWorkspaceLimits';
-import { useWorkspaceSubscription } from 'app/hooks/useWorkspaceSubscription';
 import { useGitHubPermissions } from 'app/hooks/useGitHubPermissions';
-import { MaxReposFreeTeam } from 'app/pages/Dashboard/Components/Repository/stripes';
 import { RestrictedPublicReposImport } from 'app/pages/Dashboard/Components/shared/RestrictedPublicReposImport';
-import { InactiveTeamStripe } from 'app/pages/Dashboard/Components/shared/InactiveTeamStripe';
 import { useDismissible } from 'app/hooks';
+import track from '@codesandbox/common/lib/utils/analytics';
 import { EmptyRepositories } from './EmptyRepositories';
 
 export const RepositoriesPage = () => {
@@ -38,12 +35,6 @@ export const RepositoriesPage = () => {
     });
   }, [activeTeam]);
 
-  const { isInactiveTeam } = useWorkspaceSubscription();
-  const {
-    hasMaxPublicRepositories,
-    hasMaxPrivateRepositories,
-  } = useWorkspaceLimits();
-
   const { restrictsPublicRepos } = useGitHubPermissions();
 
   const pageType: PageTypes = 'repositories';
@@ -62,12 +53,12 @@ export const RepositoriesPage = () => {
       repoItems.unshift({
         type: 'import-repository',
         onImportClicked: () => {
-          actions.openCreateSandboxModal({ initialTab: 'import' });
+          track('Repositories Page - Import Repository', {
+            codesandbox: 'V1',
+            event_source: 'UI',
+          });
+          actions.modalOpened({ modal: 'importRepository' });
         },
-        disabled:
-          hasMaxPublicRepositories ||
-          hasMaxPrivateRepositories ||
-          isInactiveTeam,
       });
     }
 
@@ -78,18 +69,6 @@ export const RepositoriesPage = () => {
   const isEmpty = itemsToShow.length === 0;
 
   const renderMessageStripe = () => {
-    if (hasMaxPublicRepositories || hasMaxPrivateRepositories) {
-      return <MaxReposFreeTeam />;
-    }
-
-    if (isInactiveTeam) {
-      return (
-        <InactiveTeamStripe>
-          Re-activate your workspace to import new repositories.
-        </InactiveTeamStripe>
-      );
-    }
-
     if (restrictsPublicRepos && !dismissedPermissionsBanner) {
       return (
         <RestrictedPublicReposImport onDismiss={dismissPermissionsBanner} />

@@ -1,15 +1,14 @@
 import codesandbox from '@codesandbox/common/lib/themes/codesandbox.json';
 import { ThemeProvider } from '@codesandbox/components';
-import {
-  COLUMN_MEDIA_THRESHOLD,
-  CreateSandbox,
-} from 'app/components/CreateSandbox';
 import { useLocation } from 'react-router-dom';
 import Modal from 'app/components/Modal';
 import { useAppState, useActions } from 'app/overmind';
 import getVSCodeTheme from 'app/src/app/pages/Sandbox/Editor/utils/get-vscode-theme';
 import React, { FunctionComponent, useEffect, useState } from 'react';
 
+import { ImportRepository } from 'app/components/Create/ImportRepository';
+import { CreateBox } from 'app/components/Create/CreateBox';
+import { GenericCreate } from 'app/components/Create/GenericCreate';
 import { AddPreset } from './AddPreset';
 import { DeleteDeploymentModal } from './DeleteDeploymentModal';
 import { DeletePreset } from './DeletePreset';
@@ -26,7 +25,7 @@ import { LiveSessionRestricted } from './LiveSessionRestricted';
 import { LiveVersionMismatch } from './LiveSessionVersionMismatch';
 import { NetlifyLogs } from './NetlifyLogs';
 import { PickSandboxModal } from './PickSandboxModal';
-import { PreferencesModal } from './PreferencesModal';
+import { Preferences } from './PreferencesModal';
 import { RecoverFilesModal } from './RecoverFilesModal';
 import { LegacyPaymentModal } from './LegacyPaymentModal';
 import { SandboxPickerModal } from './SandboxPickerModal';
@@ -53,16 +52,34 @@ import { EditorSeatsUpgrade } from './EditorSeatsUpgrade';
 
 const modals = {
   preferences: {
-    Component: PreferencesModal,
+    Component: Preferences,
     width: 900,
   },
   legacyPayment: {
     Component: LegacyPaymentModal,
     width: 600,
   },
-  newSandbox: {
-    Component: CreateSandbox,
-    width: () => (window.outerWidth > COLUMN_MEDIA_THRESHOLD ? 1200 : 950),
+  createDevbox: {
+    Component: CreateBox,
+    width: 950,
+    props: {
+      type: 'devbox',
+    },
+  },
+  createSandbox: {
+    Component: CreateBox,
+    width: 950,
+    props: {
+      type: 'sandbox',
+    },
+  },
+  genericCreate: {
+    Component: GenericCreate,
+    width: 950,
+  },
+  importRepository: {
+    Component: ImportRepository,
+    width: 950,
   },
   share: {
     Component: ShareModal,
@@ -225,6 +242,7 @@ const Modals: FunctionComponent = () => {
       settings: { customVSCodeTheme },
     },
     currentModal,
+    currentModalItemId,
   } = useAppState();
 
   const [localState, setLocalState] = useState({
@@ -260,6 +278,13 @@ const Modals: FunctionComponent = () => {
   }, [pathname, localState]);
 
   const modal = currentModal && modals[currentModal];
+  if (currentModal === 'createDevbox' || currentModal === 'createSandbox') {
+    modal.props = {
+      ...modal.props,
+      ...(currentModalItemId ? { collectionId: currentModalItemId } : {}),
+    };
+  }
+
   return (
     <ThemeProvider {...themeProps}>
       <Modal
@@ -273,7 +298,9 @@ const Modals: FunctionComponent = () => {
       >
         {modal
           ? React.createElement(modal.Component, {
+              ...(modal.props || {}),
               closeModal: () => modalClosed(),
+              isModal: true,
             })
           : null}
       </Modal>
@@ -284,3 +311,8 @@ const Modals: FunctionComponent = () => {
 };
 
 export { Modals };
+
+export interface ModalContentProps {
+  closeModal?: () => void;
+  isModal: boolean;
+}

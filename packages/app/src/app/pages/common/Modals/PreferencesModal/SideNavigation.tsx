@@ -2,7 +2,9 @@ import { Element, Stack, Text } from '@codesandbox/components';
 import css from '@styled-system/css';
 import React, { ComponentType, FunctionComponent } from 'react';
 
-import { useAppState, useActions } from 'app/overmind';
+import { useActions } from 'app/overmind';
+
+import { useIsEditorPage } from 'app/hooks/useIsEditorPage';
 
 type MenuItem = {
   Icon: ComponentType;
@@ -11,10 +13,14 @@ type MenuItem = {
 };
 type Props = {
   menuItems: MenuItem[];
+  selectedTab: string;
 };
-export const SideNavigation: FunctionComponent<Props> = ({ menuItems }) => {
-  const { itemId = 'appearance' } = useAppState().preferences;
+export const SideNavigation: FunctionComponent<Props> = ({
+  menuItems,
+  selectedTab,
+}) => {
   const { itemIdChanged } = useActions().preferences;
+  const isEditorPage = useIsEditorPage();
 
   return (
     <Element css={css({ width: 244 })} paddingBottom={8}>
@@ -29,7 +35,7 @@ export const SideNavigation: FunctionComponent<Props> = ({ menuItems }) => {
           color: 'sideBarSectionHeader.foreground',
         })}
       >
-        Preferences
+        {isEditorPage ? 'Preferences' : 'Settings'}
       </Text>
 
       <Element style={{ position: 'relative' }}>
@@ -53,7 +59,7 @@ export const SideNavigation: FunctionComponent<Props> = ({ menuItems }) => {
               lineHeight: 1,
               border: '1px solid transparent',
               color:
-                itemId === id
+                selectedTab === id
                   ? 'list.hoverForeground'
                   : 'sideBarSectionHeader.foreground',
               '&:hover': {

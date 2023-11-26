@@ -29,7 +29,7 @@ export const TeamInfo: React.FC = () => {
   const actions = useActions();
 
   const { isTeamAdmin } = useWorkspaceAuthorization();
-  const { isLegacyFreeTeam, isInactiveTeam } = useWorkspaceSubscription();
+  const { isPro } = useWorkspaceSubscription();
 
   const getFile = async avatar => {
     const url = await new Promise((resolve, reject) => {
@@ -201,16 +201,13 @@ export const TeamInfo: React.FC = () => {
               variant="square"
               name="edit"
               size={12}
-              title="Edit team"
+              title="Edit workspace"
               onClick={() => setEditing(true)}
             />
           )}
         </Stack>
 
-        <Stack>
-          {isLegacyFreeTeam && <Badge variant="trial">Free</Badge>}
-          {isInactiveTeam && <Badge variant="neutral">Inactive</Badge>}
-        </Stack>
+        <Stack>{isPro && <Badge variant="pro">Pro</Badge>}</Stack>
 
         <Text size={3} css={{ marginTop: '8px' }} variant="muted">
           {team.description}

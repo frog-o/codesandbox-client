@@ -49,12 +49,12 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
 
 type SettingsNavigationProps = {
   teamId: string;
-  personal: boolean;
+  isPersonal: boolean;
 };
 
-export const SettingNavigation = ({
+export const SettingsNavigation = ({
   teamId,
-  personal,
+  isPersonal,
 }: SettingsNavigationProps) => {
   return (
     <Stack direction="vertical">
@@ -69,9 +69,10 @@ export const SettingNavigation = ({
         gap={6}
       >
         <NavigationLink url={dashboardUrls.settings(teamId)}>
-          Account
+          Overview
         </NavigationLink>
-        {!personal && (
+
+        {!isPersonal && (
           <NavigationLink url={dashboardUrls.registrySettings(teamId)}>
             NPM Registry
           </NavigationLink>

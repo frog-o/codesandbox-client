@@ -2,8 +2,6 @@ import React from 'react';
 import { useEffects, useActions, useAppState } from 'app/overmind';
 import { Menu } from '@codesandbox/components';
 import { SubscriptionType } from 'app/graphql/types';
-import { useWorkspaceSubscription } from 'app/hooks/useWorkspaceSubscription';
-import { useWorkspaceLimits } from 'app/hooks/useWorkspaceLimits';
 import { Context, MenuItem } from '../ContextMenu';
 import {
   DashboardSandbox,
@@ -39,8 +37,6 @@ export const MultiMenu = ({ selectedItems, page }: IMultiMenuProps) => {
   const actions = useActions();
   const { notificationToast } = useEffects();
   const { visible, setVisibility, position } = React.useContext(Context);
-  const { isFree, isInactiveTeam } = useWorkspaceSubscription();
-  const { hasMaxPublicSandboxes } = useWorkspaceLimits();
 
   /*
     sandbox options - export, make template, delete
@@ -104,9 +100,7 @@ export const MultiMenu = ({ selectedItems, page }: IMultiMenuProps) => {
       preventSandboxLeaving: Boolean(
         [...sandboxes, ...templates].find(
           s => s.sandbox.permissions.preventSandboxLeaving
-        ) ||
-          (isFree && hasMaxPublicSandboxes) ||
-          isInactiveTeam
+        )
       ),
     });
   };
@@ -156,7 +150,7 @@ export const MultiMenu = ({ selectedItems, page }: IMultiMenuProps) => {
 
   const FROZEN_ITEMS = [
     sandboxes.some(s => !s.sandbox.isFrozen) && {
-      label: 'Freeze sandboxes',
+      label: 'Freeze items',
       fn: () => {
         actions.dashboard.changeSandboxesFrozen({
           sandboxIds: sandboxes.map(sandbox => sandbox.sandbox.id),
@@ -165,7 +159,7 @@ export const MultiMenu = ({ selectedItems, page }: IMultiMenuProps) => {
       },
     },
     sandboxes.some(s => s.sandbox.isFrozen) && {
-      label: 'Unfreeze sandboxes',
+      label: 'Unfreeze items',
       fn: () => {
         actions.dashboard.changeSandboxesFrozen({
           sandboxIds: sandboxes.map(sandbox => sandbox.sandbox.id),
@@ -230,7 +224,7 @@ export const MultiMenu = ({ selectedItems, page }: IMultiMenuProps) => {
 
   const DELETE = { label: 'Delete items', fn: deleteItems };
   const RECOVER = {
-    label: 'Recover Sandboxes',
+    label: 'Recover items',
     fn: () => {
       actions.dashboard.recoverSandboxes(
         [...sandboxes, ...templates].map(s => s.sandbox.id)
@@ -238,7 +232,7 @@ export const MultiMenu = ({ selectedItems, page }: IMultiMenuProps) => {
     },
   };
   const PERMANENTLY_DELETE = {
-    label: 'Permanently delete sandboxes',
+    label: 'Permanently delete items',
     fn: () => {
       actions.dashboard.permanentlyDeleteSandboxes(
         [...sandboxes, ...templates].map(s => s.sandbox.id)

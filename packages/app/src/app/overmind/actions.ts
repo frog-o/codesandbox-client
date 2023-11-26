@@ -6,7 +6,6 @@ import {
 } from '@codesandbox/common/lib/utils/notifications';
 import { protocolAndHost } from '@codesandbox/common/lib/utils/url-generator';
 
-import { NotificationStatus } from '@codesandbox/notifications';
 import { TeamStep } from 'app/pages/Dashboard/Components/NewTeamModal';
 import { withLoadApp } from './factories';
 import * as internalActions from './internalActions';
@@ -77,7 +76,7 @@ export const onInitializeOvermind = async (
   effects.gql.initialize(gqlOptions, () => effects.live.socket);
 
   if (state.hasLogIn) {
-    await actions.internal.setActiveWorkspaceFromUrlOrStore();
+    await actions.internal.initializeActiveWorkspace();
   }
 
   effects.notifications.initialize({
@@ -264,7 +263,11 @@ type ModalName =
   | 'minimumPrivacy'
   | 'addMemberToWorkspace'
   | 'legacyPayment'
-  | 'editorSeatsUpgrade';
+  | 'editorSeatsUpgrade'
+  | 'importRepository'
+  | 'createSandbox'
+  | 'createDevbox'
+  | 'genericCreate';
 
 export const modalOpened = (
   { state, effects }: Context,
@@ -278,6 +281,9 @@ export const modalOpened = (
   state.currentModal = props.modal;
   if (props.modal === 'preferences' && props.itemId) {
     state.preferences.itemId = props.itemId;
+  }
+  if (props.modal === 'createDevbox' || props.modal === 'createSandbox') {
+    state.currentModalItemId = props.itemId;
   } else {
     state.currentModalMessage = props.message || null;
   }
@@ -441,6 +447,8 @@ export const signOutClicked = async ({ state, effects, actions }: Context) => {
   }
   await effects.api.signout();
   effects.browser.storage.remove(TEAM_ID_LOCAL_STORAGE);
+  effects.router.clearWorkspaceId();
+
   identify('signed_in', false);
   document.cookie = 'signedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
   document.cookie =
@@ -550,24 +558,8 @@ export const setActiveTeam = async (
     try {
       await actions.getActiveTeamInfo();
     } catch (e) {
-      let personalWorkspaceId = state.personalWorkspaceId;
-      if (!personalWorkspaceId) {
-        const res = await effects.gql.queries.getPersonalWorkspaceId({});
-        personalWorkspaceId = res.me?.personalWorkspaceId;
-      }
-
-      if (personalWorkspaceId) {
-        // This toast was triggered when the getTeam query inside getActiveTeamInfo
-        // failed due to an invalid workspace id in the url or localStorage. We now
-        // check for id validity when initializing.
-        effects.notificationToast.add({
-          title: 'Could not find current workspace',
-          message: "We've switched you to your personal workspace",
-          status: NotificationStatus.WARNING,
-        });
-        // Something went wrong while fetching the workspace
-        actions.setActiveTeam({ id: personalWorkspaceId! });
-      }
+      // Reset the active workspace if something goes wrong
+      actions.internal.setFallbackWorkspace();
     }
   }
 
@@ -580,7 +572,7 @@ export const getActiveTeamInfo = async ({
   actions,
 }: Context) => {
   if (!state.activeTeam) {
-    await actions.internal.setActiveWorkspaceFromUrlOrStore();
+    await actions.internal.initializeActiveWorkspace();
   }
 
   // The getTeam query below used to fail because we weren't sure if the id in
@@ -601,16 +593,6 @@ export const getActiveTeamInfo = async ({
   return currentTeam;
 };
 
-export const openCreateSandboxModal = (
-  { actions }: Context,
-  props: {
-    collectionId?: string;
-    initialTab?: 'import';
-  }
-) => {
-  actions.modals.newSandboxModal.open(props);
-};
-
 type OpenCreateTeamModalParams = {
   step: TeamStep;
   hasNextStep?: boolean;
@@ -620,7 +602,7 @@ export const openCreateTeamModal = (
   props?: OpenCreateTeamModalParams
 ) => {
   actions.modals.newTeamModal.open({
-    step: props?.step ?? 'name',
+    step: props?.step ?? 'create',
     hasNextStep: props?.hasNextStep ?? true,
   });
 };

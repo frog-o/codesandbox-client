@@ -23,7 +23,6 @@ import { Position } from '../Components/Selection';
 import { SIDEBAR_WIDTH } from './constants';
 import { UpgradeFreeTeamToPro } from './BottomMessages/UpgradeFreeTeamToPro';
 import { TrialExpiring } from './BottomMessages/TrialExpiring';
-import { CreateProWorkspace } from './BottomMessages/CreateProWorkspace';
 import { StartTrial } from './BottomMessages/StartTrial';
 import { SidebarContext } from './utils';
 import { RowItem } from './RowItem';
@@ -46,7 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const state = useAppState();
   const actions = useActions();
 
-  const { dashboard, activeTeam, activeTeamInfo, personalWorkspaceId } = state;
+  const { dashboard, activeTeam, activeTeamInfo } = state;
 
   React.useEffect(() => {
     // Used to fetch collections
@@ -56,10 +55,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   React.useEffect(() => {
     // Used to check for templates and synced sandboxes
-    actions.sidebar.getSidebarData(
-      state.activeTeam !== personalWorkspaceId ? state.activeTeam : undefined
-    );
-  }, [state.activeTeam, personalWorkspaceId, actions.sidebar]);
+    actions.sidebar.getSidebarData(state.activeTeam);
+  }, [state.activeTeam, actions.sidebar]);
 
   const folders =
     (dashboard.allCollections || []).filter(folder => folder.path !== '/') ||
@@ -93,11 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const teamDataLoaded = dashboard.teams.length > 0 && activeTeamInfo;
   const showRespositories = !state.environment.isOnPrem;
 
-  const {
-    isPersonalSpace,
-    isTeamSpace,
-    isBillingManager,
-  } = useWorkspaceAuthorization();
+  const { isBillingManager, isPrimarySpace } = useWorkspaceAuthorization();
 
   const {
     subscription,
@@ -201,22 +194,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             icon="clock"
           />
 
-          {isPersonalSpace && (
-            <RowItem
-              name="Shared with me"
-              page="shared"
-              path={dashboardUrls.shared(activeTeam)}
-              icon="sharing"
-            />
-          )}
-          {isPersonalSpace && (
-            <RowItem
-              name="Likes"
-              page="liked"
-              path={dashboardUrls.liked(activeTeam)}
-              icon="heart"
-            />
-          )}
+          <RowItem
+            name="Shared with me"
+            page="shared"
+            path={dashboardUrls.shared(activeTeam)}
+            icon="sharing"
+          />
+
           {showRespositories && (
             <>
               <Element marginTop={4} />
@@ -229,7 +213,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   Repositories
                 </Text>
               </Element>
-              {isPersonalSpace && (
+
+              {isPrimarySpace && (
                 <RowItem
                   name="My contributions"
                   page="my-contributions"
@@ -237,6 +222,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   icon="contribution"
                 />
               )}
+
               <RowItem
                 name="All repositories"
                 page="repositories"
@@ -281,8 +267,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             />
           ) : null}
 
+          {state.sidebar.hasSyncedSandboxes ? (
+            <RowItem
+              name="Imported templates"
+              page="synced-sandboxes"
+              path={dashboardUrls.syncedSandboxes(activeTeam)}
+              icon="sync"
+            />
+          ) : null}
+
           <NestableRowItem
-            name="All sandboxes"
+            name="All devboxes and sandboxes"
             path={dashboardUrls.sandboxes('/', activeTeam)}
             page="sandboxes"
             folderPath="/"
@@ -294,15 +289,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             ]}
           />
 
-          {state.sidebar.hasSyncedSandboxes ? (
-            <RowItem
-              name="Synced"
-              page="synced-sandboxes"
-              path={dashboardUrls.syncedSandboxes(activeTeam)}
-              icon="sync"
-            />
-          ) : null}
-
           <RowItem
             name="Recently deleted"
             page="deleted"
@@ -312,19 +298,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Element marginTop={3} />
         </List>
 
-        {teamDataLoaded && isFree ? (
+        {teamDataLoaded && isFree && isBillingManager ? (
           <Element css={{ margin: 'auto 24px 0' }}>
-            {isTeamSpace && isBillingManager && isEligibleForTrial ? (
+            {isEligibleForTrial ? (
               <StartTrial activeTeam={activeTeam} />
-            ) : null}
-
-            {isTeamSpace && !isEligibleForTrial ? (
+            ) : (
               <UpgradeFreeTeamToPro activeTeam={activeTeam} />
-            ) : null}
-
-            {isPersonalSpace ? (
-              <CreateProWorkspace userCanStartTrial={state.userCanStartTrial} />
-            ) : null}
+            )}
           </Element>
         ) : null}
 

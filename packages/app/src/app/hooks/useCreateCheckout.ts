@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useActions, useAppState, useEffects } from 'app/overmind';
+import { useAppState, useEffects } from 'app/overmind';
 import { useLocation } from 'react-router';
 import { dashboard as dashboardURLs } from '@codesandbox/common/lib/utils/url-generator';
 import track from '@codesandbox/common/lib/utils/analytics';
@@ -14,7 +14,6 @@ type CheckoutStatus =
 export type CheckoutOptions = {
   interval?: 'month' | 'year';
   cancelPath?: string;
-  createTeam?: boolean;
   trackingLocation:
     | 'settings_upgrade'
     | 'dashboard_upgrade_banner'
@@ -24,6 +23,7 @@ export type CheckoutOptions = {
     | 'editor_seats_upgrade'
     | 'pro_page'
     | 'user_settings'
+    | 'user_menu'
     | 'dashboard_workspace_settings'
     | 'restrictions_banner'
     | 'max_public_repos';
@@ -67,7 +67,6 @@ export const useCreateCheckout = (): [
   boolean
 ] => {
   const { activeTeam, isProcessingPayment, user } = useAppState();
-  const actions = useActions();
   const { isFree } = useWorkspaceSubscription();
   const { isBillingManager } = useWorkspaceAuthorization();
   const [status, setStatus] = useState<CheckoutStatus>({ status: 'idle' });
@@ -87,7 +86,6 @@ export const useCreateCheckout = (): [
   async function createCheckout({
     interval = 'month',
     cancelPath = pathname + search,
-    createTeam,
     trackingLocation,
   }: CheckoutOptions): Promise<void> {
     try {
@@ -98,21 +96,8 @@ export const useCreateCheckout = (): [
         throw new Error('Invalid activeTeam or user');
       }
 
-      let teamId = activeTeam;
-
-      if (createTeam) {
-        const newTeam = await actions.dashboard.createTeam({
-          teamName: `${user.username}'s pro`,
-        });
-
-        teamId = newTeam.id;
-      }
-
-      const successPath = createTeam
-        ? dashboardURLs.recent(teamId, {
-            new_workspace: 'true',
-          })
-        : dashboardURLs.settings(teamId);
+      const teamId = activeTeam;
+      const successPath = dashboardURLs.settings(teamId);
 
       const payload = await api.stripeCreateCheckout({
         success_path: addStripeSuccessParam(successPath, trackingLocation),

@@ -107,15 +107,15 @@ export const Dashboard: FunctionComponent = () => {
 
     const searchParams = new URLSearchParams(location.search);
 
-    if (JSON.parse(searchParams.get('new_workspace'))) {
-      actions.openCreateTeamModal({ step: 'name' });
-      searchParams.delete('new_workspace');
-    } else if (JSON.parse(searchParams.get('import_repo'))) {
-      actions.openCreateSandboxModal({ initialTab: 'import' });
+    if (JSON.parse(searchParams.get('import_repo'))) {
+      actions.modalOpened({ modal: 'importRepository' });
     } else if (JSON.parse(searchParams.get('create_sandbox'))) {
-      actions.openCreateSandboxModal();
-    } else if (JSON.parse(searchParams.get('preferences'))) {
-      actions.preferences.openPreferencesModal();
+      actions.modalOpened({ modal: 'createSandbox' });
+    } else if (JSON.parse(searchParams.get('create_devbox'))) {
+      actions.modalOpened({ modal: 'createDevbox' });
+    } else if (searchParams.get('preferences')) {
+      const toToOpen = searchParams.get('preferences');
+      actions.preferences.openPreferencesModal(toToOpen);
     }
 
     history.replace({ search: searchParams.toString() });

@@ -108,18 +108,22 @@ const sandboxGitUrl = (git: {
 
 export const editorUrl = () => `/s/`;
 
-export const v2EditorUrl = () => `/p/`;
+export const newEditorUrlPrefix = () => `/p/`;
 
-export const sandboxUrl = (sandboxDetails: SandboxUrlSourceData) => {
-  const baseUrl = sandboxDetails.isV2
-    ? `${v2EditorUrl()}sandbox/`
-    : editorUrl();
+export const sandboxUrl = (
+  sandboxDetails: SandboxUrlSourceData,
+  hasBetaEditorExperiment?: boolean
+) => {
+  let baseUrl = editorUrl();
 
-  let queryParams = '';
-
-  if (sandboxDetails.query) {
-    queryParams = `?${new URLSearchParams(sandboxDetails.query).toString()}`;
+  if (sandboxDetails.isV2) {
+    baseUrl = `${newEditorUrlPrefix()}devbox/`;
+  } else if (!sandboxDetails.isSse && hasBetaEditorExperiment) {
+    baseUrl = `${newEditorUrlPrefix()}sandbox/`;
   }
+
+  const queryParams = sandboxDetails.query ? `?${new URLSearchParams(sandboxDetails.query).toString()}` : '';
+
 
   if (sandboxDetails.git) {
     const { git } = sandboxDetails;
@@ -348,7 +352,7 @@ const v2EditorBranchUrl = ({
     ...(source ? { utm_source: source } : {}),
   }).toString();
 
-  return `${v2EditorUrl()}github/${owner}/${repoName}${
+  return `${newEditorUrlPrefix()}github/${owner}/${repoName}${
     branchName ? '/' + branchName : ''
   }${queryString ? '?' + queryString : ''}`;
 };

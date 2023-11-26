@@ -27,12 +27,7 @@ export const PermissionSettings = () => {
 
   const { activeTeam, environment } = useAppState();
   const { isFree, isPro } = useWorkspaceSubscription();
-  const {
-    isTeamSpace,
-    isBillingManager,
-    isAdmin,
-    isPersonalSpace,
-  } = useWorkspaceAuthorization();
+  const { isBillingManager, isAdmin } = useWorkspaceAuthorization();
 
   return (
     <Stack direction="vertical" gap={6}>
@@ -40,47 +35,35 @@ export const PermissionSettings = () => {
         <MessageStripe justify="space-between">
           <span>
             You need a <Text weight="bold">Pro</Text> subscription to change
-            sandbox permissions.
+            privacy permissions.
           </span>
-          {isBillingManager || isPersonalSpace ? (
-            <MessageStripe.Action
-              as="a"
-              href={proUrl({
-                ...(isPersonalSpace ? {} : { workspaceId: activeTeam }),
-                source: 'dashboard_permission_settings',
-              })}
-              onClick={proTracking}
-            >
-              Upgrade now
-            </MessageStripe.Action>
-          ) : (
-            <MessageStripe.Action
-              as="a"
-              href="https://codesandbox.io/docs/learn/plans/trials"
-              target="_blank"
-              rel="noreferrer"
-              onClick={proTracking}
-            >
-              Learn more
-            </MessageStripe.Action>
-          )}
+          <MessageStripe.Action
+            as="a"
+            href={proUrl({
+              workspaceId: activeTeam,
+              source: 'dashboard_permission_settings',
+            })}
+            onClick={proTracking}
+          >
+            Upgrade now
+          </MessageStripe.Action>
         </MessageStripe>
       ) : null}
 
-      {isPro && isTeamSpace && !isBillingManager ? (
-        <Alert message="Please contact your admin to change sandbox permissions." />
+      {isPro && !isBillingManager ? (
+        <Alert message="Please contact your admin to change permissions." />
       ) : null}
 
       <Grid columnGap={12}>
         <Column span={[12, 12, 6]}>
           <MinimumPrivacy disabled={isFree || !isAdmin} />
         </Column>
-        {!isPersonalSpace && (
-          <Column span={[12, 12, 6]}>
-            <SandboxSecurity disabled={isFree || !isBillingManager} />
-          </Column>
-        )}
-        {isPro && !environment.isOnPrem && (
+
+        <Column span={[12, 12, 6]}>
+          <SandboxSecurity disabled={isFree || !isBillingManager} />
+        </Column>
+
+        {!environment.isOnPrem && (
           <Column span={[12, 12, 6]}>
             <AIPermission disabled={!isAdmin} />
           </Column>
@@ -92,15 +75,16 @@ export const PermissionSettings = () => {
 
 const privacyOptions = {
   0: {
-    description: 'All your sandboxes are public by default.',
+    description: 'All your devboxes and sandboxes are public by default.',
     icon: () => <Icon size={10} name="globe" />,
   },
   1: {
-    description: 'Only people with a private link are able to see a Sandbox.',
+    description:
+      'Only people that get the link are able to see your devboxes and sandboxes.',
     icon: () => <Icon size={10} name="link" />,
   },
   2: {
-    description: 'Only people you share a Sandbox with, can see it.',
+    description: 'Only people with access can see your devboxes and sandboxes.',
     icon: () => <Icon size={10} name="lock" />,
   },
 };
@@ -249,13 +233,13 @@ const SandboxSecurity = ({ disabled }: { disabled: boolean }) => {
         <Stack direction="vertical" gap={8}>
           <Stack justify="space-between">
             <Text size={4} weight="500">
-              Sandbox Security
+              Devbox and sandbox security
             </Text>
           </Stack>
 
           <Stack as="label" justify="space-between" align="center">
             <Text size={3}>
-              Disable forking and moving sandboxes outside of the workspace
+              Disable forking and moving items outside of the workspace
             </Text>
             <Switch
               on={preventSandboxLeaving}
@@ -264,7 +248,7 @@ const SandboxSecurity = ({ disabled }: { disabled: boolean }) => {
             />
           </Stack>
           <Stack as="label" justify="space-between" align="center">
-            <Text size={3}>Disable exporting sandboxes as .zip</Text>
+            <Text size={3}>Disable exporting items as .zip</Text>
             <Switch
               on={preventSandboxExport}
               onChange={() => setPreventSandboxExport(!preventSandboxExport)}
@@ -307,7 +291,7 @@ const AIPermission = ({ disabled }: { disabled: boolean }) => {
       key: 'privateRepositories',
     },
     {
-      text: 'Enable AI feature for <strong>private sandboxes</strong>',
+      text: 'Enable AI feature for <strong>private devboxes</strong>',
       key: 'privateSandboxes',
     },
     {
@@ -315,7 +299,7 @@ const AIPermission = ({ disabled }: { disabled: boolean }) => {
       key: 'publicRepositories',
     },
     {
-      text: 'Enable AI feature for <strong>public sandboxes</strong>',
+      text: 'Enable AI feature for <strong>public devboxes</strong>',
       key: 'publicSandboxes',
     },
   ];
